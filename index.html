@@ -84,18 +84,20 @@
           <output id="lockDetails" class="mt-sm"></output>
 
           <h3>Proiezioni Temporali</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Orizzonte</th>
-                <th>Uscite</th>
-                <th>Entrate (no tessera)</th>
-                <th>Entrate da tessera</th>
-                <th>Saldo</th>
-              </tr>
-            </thead>
-            <tbody id="projectionTableBody"></tbody>
-          </table>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Orizzonte</th>
+                  <th>Uscite</th>
+                  <th>Entrate (no tessera)</th>
+                  <th>Entrate da tessera</th>
+                  <th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="projectionTableBody"></tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>
@@ -107,18 +109,20 @@
         <input type="text" id="scenarioName" placeholder="Nome scenario (opzionale)">
         <button id="saveScenarioBtn" type="button">Salva scenario</button>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Tessera applicata</th>
-            <th>BEP tessera</th>
-            <th>Saldo mensile</th>
-            <th>Azioni</th>
-          </tr>
-        </thead>
-        <tbody id="scenarioTableBody"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Tessera applicata</th>
+              <th>BEP tessera</th>
+              <th>Saldo mensile</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="scenarioTableBody"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 
