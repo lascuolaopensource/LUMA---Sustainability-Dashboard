@@ -11,8 +11,6 @@
 <body>
   <!-- Contenitore principale -->
   <main>
-    <h1 class="app-title">STF - Simulatore Economico Avanzato</h1>
-
     <div class="layout-grid">
       <div class="column column-revenues">
         <!-- Area ENTRATE -->
@@ -68,7 +66,7 @@
         </section>
 
         <!-- Output in tempo reale -->
-        <section>
+        <section class="results-panel">
           <h2>Risultati e Punto di pareggio</h2>
 
           <div class="kpi-grid">
@@ -99,29 +97,29 @@
             <tbody id="projectionTableBody"></tbody>
           </table>
         </section>
-
-        <!-- Gestione scenari salvati nel browser -->
-        <section>
-          <h2>Scenari (localStorage)</h2>
-          <div class="inline">
-            <input type="text" id="scenarioName" placeholder="Nome scenario (opzionale)">
-            <button id="saveScenarioBtn" type="button">Salva scenario</button>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Tessera applicata</th>
-                <th>BEP tessera</th>
-                <th>Saldo mensile</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody id="scenarioTableBody"></tbody>
-          </table>
-        </section>
       </div>
     </div>
+
+    <!-- Gestione scenari salvati nel browser -->
+    <section class="scenarios-section">
+      <h2>Scenari (localStorage)</h2>
+      <div class="inline">
+        <input type="text" id="scenarioName" placeholder="Nome scenario (opzionale)">
+        <button id="saveScenarioBtn" type="button">Salva scenario</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Tessera applicata</th>
+            <th>BEP tessera</th>
+            <th>Saldo mensile</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="scenarioTableBody"></tbody>
+      </table>
+    </section>
   </main>
 
   <!-- Logica applicativa separata in file JS -->

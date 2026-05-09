@@ -354,6 +354,9 @@ function createControlRow(group, field) {
 
   const row = document.createElement("div");
   row.className = "control-row";
+  if (group === "costsFixed" || group === "costsVariable") {
+    row.classList.add("pseudo-border-bottom");
+  }
 
   const labelEl = document.createElement("label");
   labelEl.textContent = label;
@@ -504,7 +507,7 @@ function renderFixedOperators() {
 
   appState.operatorsFixed.forEach((operator) => {
     const row = document.createElement("div");
-    row.className = "operator-row";
+    row.className = "operator-row pseudo-border-bottom";
 
     const top = document.createElement("div");
     top.className = "inline";

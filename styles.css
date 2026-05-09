@@ -39,11 +39,11 @@
 /* Layout base della pagina */
 body {
   margin: 0;
-  font-family: "Ronzino", serif;
+  font-family: "Inter", "Ronzino", sans-serif;
   color: var(--nero-mpestatu);
   background: var(--mistra);
-  line-height: 1.35;
-  padding: 1rem;
+  line-height: 1.45;
+  padding: 1.25rem;
 }
 
 input,
@@ -59,12 +59,12 @@ main {
   max-width: 1500px;
   margin: 0 auto;
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .layout-grid {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
   grid-template-columns: 1fr 1fr 350px;
   align-items: start;
 }
@@ -85,15 +85,36 @@ main {
   top: 1rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.results-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.results-panel h3 {
+  margin-top: 0.2rem;
+}
+
+.results-panel table {
+  margin-top: 0;
+}
+
+.scenarios-section {
+  margin-top: 0.5rem;
 }
 
 /* Blocchi funzionali */
 section,
 fieldset {
   border: 1px solid var(--nero-mpestatu);
-  padding: 1.15rem;
+  padding: 1.35rem;
   margin: 0;
-  background: var(--mistra);
+  background: #ffffff;
+  border-radius: 0.5rem;
+  filter: drop-shadow(0px 1px 2px rgba(16, 24, 40, 0.06));
 }
 
 legend,
@@ -107,7 +128,9 @@ h3 {
 
 .app-title {
   font-family: "Q-Sci", "Ronzino", serif;
-  font-size: 1.1rem;
+  font-size: 3.1rem;
+  color: var(--nero-mpestatu);
+  text-align: center;
 }
 
 h3 {
@@ -126,12 +149,15 @@ h3 {
   display: grid;
   gap: 0.5rem;
   border: 1px solid var(--nero-mpestatu);
-  padding: 0.7rem;
+  padding: 0.85rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  transition: border-color 180ms ease, background-color 180ms ease;
 }
 
 .control-row:first-child {
   border-top: 1px solid var(--nero-mpestatu);
-  padding-top: 0.7rem;
+  padding-top: 0.85rem;
 }
 
 .control-row label {
@@ -164,7 +190,7 @@ h3 {
 }
 
 .is-locked {
-  border: 2px solid var(--rosciu);
+  border: 2px solid var(--fiastrella);
 }
 
 /* Stile neutro campi/bottoni */
@@ -172,10 +198,27 @@ input[type="number"],
 input[type="text"],
 button {
   width: 100%;
-  padding: 0.35rem;
+  padding: 0.5rem;
   border: 1px solid var(--nero-mpestatu);
-  background: var(--mistra);
+  background: #ffffff;
   color: var(--nero-mpestatu);
+  border-radius: 0.5rem;
+}
+
+input[type="number"],
+input[type="text"] {
+  border-radius: 0.5rem;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
 }
 
 input[type="range"] {
@@ -198,12 +241,15 @@ input[type="range"] {
 
 .list-block {
   display: grid;
-  gap: 1rem;
+  gap: 1.15rem;
 }
 
 .operator-row {
   border: 1px solid var(--nero-mpestatu);
-  padding: 0.9rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  transition: border-color 180ms ease, background-color 180ms ease;
 }
 
 .two-cols {
@@ -224,10 +270,12 @@ output {
   display: block;
   padding: 0.75rem;
   border: 1px solid var(--nero-mpestatu);
+  border-radius: 0.5rem;
   min-height: 2rem;
   white-space: pre-line;
-  font-family: monospace;
+  font-family: inherit;
   font-size: 0.9rem;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
 .kpi-grid {
@@ -239,6 +287,8 @@ output {
 .kpi-card {
   border: 1px solid var(--nero-mpestatu);
   padding: 0.75rem;
+  border-radius: 0.5rem;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
 .kpi-card p {
@@ -278,6 +328,20 @@ td {
   display: flex;
   gap: 0.35rem;
   flex-wrap: wrap;
+}
+
+.pseudo-border-bottom:hover {
+  border-bottom-color: rgba(47, 45, 46, 0.35);
+  background: rgba(47, 45, 46, 0.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media (max-width: 720px) {
