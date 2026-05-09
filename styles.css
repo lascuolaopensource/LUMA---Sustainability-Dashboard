@@ -122,6 +122,10 @@ main {
   margin-top: 0.5rem;
 }
 
+.projections-section {
+  margin-top: 0.25rem;
+}
+
 /* Blocchi funzionali */
 section,
 fieldset {
