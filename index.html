@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <!-- Metadati base per layout responsive -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STF - Calcolatore Sostenibilita Economica</title>
+  <!-- Stili esterni separati per migliorare leggibilita e manutenzione -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Contenitore principale del wireframe funzionale -->
+  <main>
+    <h1>STF - Prototipo Calcolatore Sostenibilita Economica</h1>
+
+    <!-- Sezione input costi fissi mensili -->
+    <section>
+      <h2>USCITE Mensili</h2>
+      <div class="grid" id="fixedCosts"></div>
+    </section>
+
+    <!-- Sezione input entrate da attivita commerciali -->
+    <section>
+      <h2>ENTRATE (escluso tesseramento)</h2>
+      <div class="grid" id="revenues"></div>
+    </section>
+
+    <!-- Sezione tesseramento e lock del costo membership -->
+    <section>
+      <h2>Tesseramento</h2>
+      <div class="grid" id="membership"></div>
+      <div class="inline mt-md">
+        <label>
+          <input type="checkbox" id="membershipLockEnabled">
+          Blocca costo membership
+        </label>
+        <input type="number" id="membershipLockValue" min="0" step="1" value="10" aria-label="Valore lock membership">
+      </div>
+    </section>
+
+    <!-- Output economico aggiornato in tempo reale -->
+    <section>
+      <h2>Output in tempo reale</h2>
+      <output id="summary"></output>
+      <output id="lockDetails" class="mt-sm"></output>
+    </section>
+
+    <!-- Gestione scenari salvati nel browser -->
+    <section>
+      <h2>Scenari (localStorage)</h2>
+      <div class="inline">
+        <input type="text" id="scenarioName" placeholder="Nome scenario (opzionale)">
+        <button id="saveScenarioBtn" type="button">Salva scenario</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Iscritti</th>
+            <th>Membership lock</th>
+            <th>Deficit da coprire</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="scenarioTableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Logica applicativa separata in file JS -->
+  <script src="app.js"></script>
+</body>
+</html>

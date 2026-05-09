@@ -1,0 +1,149 @@
+/*
+  STF - Stili minimi per prototipo funzionale.
+  Obiettivo: solo leggibilità e struttura, senza decorazioni.
+*/
+
+:root {
+  --gap: 0.75rem;
+  --border: #bbb;
+  --text: #111;
+  --bg: #fff;
+}
+
+/* Reset essenziale */
+* {
+  box-sizing: border-box;
+}
+
+/* Layout base della pagina */
+body {
+  margin: 0;
+  font-family: sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.35;
+  padding: 1rem;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+
+/* Blocchi funzionali */
+section,
+fieldset {
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  margin: 0;
+}
+
+legend,
+h1,
+h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 1.1rem;
+}
+
+/* Griglie per controlli */
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.control-row {
+  display: grid;
+  gap: 0.35rem;
+  border-top: 1px dashed #ddd;
+  padding-top: 0.5rem;
+}
+
+.control-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.control-row label {
+  font-size: 0.92rem;
+}
+
+/* Affianca input number e slider */
+.pair {
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+}
+
+/* Stile neutro campi/bottoni */
+input[type="number"],
+input[type="text"],
+button {
+  width: 100%;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+/* Riga a due colonne (nome scenario + bottone, lock + valore) */
+.inline {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+/* Utility spaziature */
+.mt-sm {
+  margin-top: 0.5rem;
+}
+
+.mt-md {
+  margin-top: 0.75rem;
+}
+
+/* Output testuale in formato leggibile */
+output {
+  display: block;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  min-height: 2rem;
+  white-space: pre-line;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* Tabella scenari */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.35rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
