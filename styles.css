@@ -32,18 +32,19 @@
   font-display: swap;
 }
 
-/* Reset essenziale */
+/* Reset essenziale: elimina differenze tra browser e box model. */
 * {
   box-sizing: border-box;
 }
 
+/* Evita overflow orizzontale indesiderato su viewport strette. */
 html,
 body {
   max-width: 100%;
   overflow-x: hidden;
 }
 
-/* Layout base della pagina */
+/* Layout base della pagina: tipografia, colori, spaziatura e sfondo. */
 body {
   margin: 0;
   font-family: "Inter", "Ronzino", sans-serif;
@@ -143,7 +144,7 @@ main {
   margin-top: 0.25rem;
 }
 
-/* Blocchi funzionali */
+/* Blocchi funzionali: contenitori principali delle varie sezioni. */
 section,
 fieldset {
   border: 1px solid var(--nero-mpestatu);
@@ -177,7 +178,7 @@ h3 {
   font-size: 0.95rem;
 }
 
-/* Griglie per controlli */
+/* Griglie per controlli: organizzano input e slider in modo leggibile. */
 .grid {
   display: grid;
   gap: clamp(0.7rem, 1.4vw, 1rem);
@@ -205,7 +206,7 @@ h3 {
   font-size: 0.92rem;
 }
 
-/* Affianca input number e slider */
+/* Affianca input number e slider nella stessa riga di controllo. */
 .pair {
   display: grid;
   gap: 0.35rem;
@@ -234,7 +235,7 @@ h3 {
   border: 2px solid var(--fiastrella);
 }
 
-/* Stile neutro campi/bottoni */
+/* Stile neutro per campi e bottoni, senza dipendenze da framework. */
 input[type="number"],
 input[type="text"],
 button {
@@ -267,7 +268,7 @@ input[type="range"] {
   accent-color: var(--fiastrella);
 }
 
-/* Riga a due colonne (nome scenario + bottone, lock + valore) */
+/* Riga compatta a due colonne: usata nelle aree di supporto e comandi rapidi. */
 .inline {
   display: grid;
   gap: 0.5rem;
@@ -301,7 +302,7 @@ input[type="range"] {
   grid-template-columns: repeat(2, minmax(200px, 1fr));
 }
 
-/* Utility spaziature */
+/* Utility spaziature: piccoli margini standardizzati. */
 .mt-sm {
   margin-top: 0.5rem;
 }
@@ -310,7 +311,7 @@ input[type="range"] {
   margin-top: 0.75rem;
 }
 
-/* Output testuale in formato leggibile */
+/* Output testuale: blocchi leggibili per riepilogo e dettagli di calcolo. */
 output {
   display: block;
   padding: 0.75rem;
@@ -355,7 +356,7 @@ output {
   color: var(--rosciu);
 }
 
-/* Tabella scenari */
+/* Tabelle: scenari e proiezioni temporali. */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -395,6 +396,7 @@ td {
   background: rgba(47, 45, 46, 0.03);
 }
 
+/* Rispetta le preferenze di accessibilità per il motion ridotto. */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -404,6 +406,7 @@ td {
   }
 }
 
+/* Adattamenti tablet/smartphone: impila i layout e semplifica i controlli. */
 @media (max-width: 720px) {
   section,
   fieldset {
@@ -459,6 +462,7 @@ td {
   }
 }
 
+/* Adattamenti per schermi molto piccoli. */
 @media (max-width: 480px) {
   body {
     padding: 0.5rem;
@@ -486,6 +490,7 @@ td {
   }
 }
 
+/* Layout intermedio: riduce la colonna risultati quando lo spazio cala. */
 @media (max-width: 1180px) {
   .layout-grid {
     grid-template-columns: 1fr 1fr minmax(260px, 320px);
@@ -507,6 +512,7 @@ td {
   }
 }
 
+/* Ultimo breakpoint: forza il layout a una colonna unica. */
 @media (max-width: 860px) {
   .layout-grid {
     grid-template-columns: 1fr;

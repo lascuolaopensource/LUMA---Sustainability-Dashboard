@@ -7,6 +7,11 @@
 
 const STORAGE_KEY = "stf_scenari_v2";
 
+/*
+  Stato iniziale dell'applicazione.
+  Ogni blocco rappresenta un'area economica distinta e si può
+  usare come base per nuovi scenari o come default del simulatore.
+*/
 const appState = {
   revenues: {
     postazioni_studio_mesi: 10,
@@ -57,6 +62,10 @@ const appState = {
   scenarios: []
 };
 
+/*
+  Orizzonti temporali usati per le proiezioni nel riepilogo.
+  Se vuoi confronti più lunghi o più brevi, modifica questo array.
+*/
 const projectionHorizons = [1, 6, 12, 24, 36];
 
 /*
@@ -308,6 +317,7 @@ const controlSchemas = [
 ];
 
 function formatCurrency(value) {
+  // Formatta ogni importo in euro con locale italiano.
   return Number(value || 0).toLocaleString("it-IT", {
     style: "currency",
     currency: "EUR",
@@ -316,10 +326,12 @@ function formatCurrency(value) {
 }
 
 function fieldId(group, key) {
+  // Genera un identificativo stabile per il metadato di un campo.
   return `${group}.${key}`;
 }
 
 function getFieldMeta(id) {
+  // Inizializza i metadati del campo solo quando servono.
   if (!appState.fieldMeta[id]) {
     appState.fieldMeta[id] = { excluded: false, locked: false };
   }
@@ -327,16 +339,19 @@ function getFieldMeta(id) {
 }
 
 function isFieldIncluded(group, key) {
+  // Un campo è incluso finché non viene escluso dall'utente.
   const meta = getFieldMeta(fieldId(group, key));
   return !meta.excluded;
 }
 
 function isFieldLocked(group, key) {
+  // Un campo è bloccato quando il valore viene protetto da modifica.
   const meta = getFieldMeta(fieldId(group, key));
   return !!meta.locked;
 }
 
 function clampValue(raw, min, max) {
+  // Normalizza l'input: numero valido e dentro il range consentito.
   let value = Number(raw);
   if (Number.isNaN(value)) {
     value = min;
@@ -355,6 +370,7 @@ function clampValue(raw, min, max) {
   esclusione dal totale e lock del dato.
 */
 function createControlRow(group, field) {
+  // Crea una riga autonoma e riutilizzabile per numero, slider e toggle.
   const { key, label, min, max, step, hasRange, excludeDisabled } = field;
   const id = fieldId(group, key);
   const meta = getFieldMeta(id);
@@ -467,6 +483,7 @@ function createControlRow(group, field) {
 }
 
 function renderSchemaControls() {
+  // Disegna tutti i blocchi configurabili a partire dallo schema dati.
   controlSchemas.forEach((schema) => {
     const mount = document.getElementById(schema.mountId);
     mount.innerHTML = "";
@@ -481,6 +498,7 @@ function renderSchemaControls() {
   Ogni operatore e una riga costo con esclusione e lock.
 */
 function addFixedOperator() {
+  // Aggiunge un operatore fisso con valori iniziali conservativi.
   const nextNumber = appState.operatorsFixed.length + 1;
   appState.operatorsFixed.push({
     id: Date.now() + Math.floor(Math.random() * 1000),
@@ -495,12 +513,14 @@ function addFixedOperator() {
 }
 
 function deleteFixedOperator(operatorId) {
+  // Rimuove un operatore fisso dalla lista corrente.
   appState.operatorsFixed = appState.operatorsFixed.filter((item) => item.id !== operatorId);
   renderFixedOperators();
   calculate();
 }
 
 function renderFixedOperators() {
+  // Ricrea il pannello operatori per mantenere UI e stato allineati.
   const mount = document.getElementById("fixedOperatorsList");
   mount.innerHTML = "";
 
@@ -664,6 +684,7 @@ function renderFixedOperators() {
   Calcola entrate mensili escludendo automaticamente le righe disattivate.
 */
 function computeMonthlyRevenues() {
+  // Calcola ogni fonte di ricavo separatamente, poi aggrega il totale.
   const r = appState.revenues;
 
   const studio =
@@ -719,6 +740,7 @@ function computeMonthlyRevenues() {
   Calcola uscite mensili suddivise in costi fissi, risorse fisse e variabili.
 */
 function computeMonthlyCosts() {
+  // Calcola i costi fissi, variabili e del personale in modo trasparente.
   const f = appState.costsFixed;
   const v = appState.costsVariable;
 
@@ -772,6 +794,7 @@ function computeMonthlyCosts() {
 }
 
 function calculateProjectionRows(monthlyCosts, monthlyRevenuesNoMembership, monthlyMembershipRevenues) {
+  // Espande il mese base su più orizzonti temporali per il confronto.
   return projectionHorizons.map((months) => {
     const totalCosts = monthlyCosts * months;
     const totalNoMembership = monthlyRevenuesNoMembership * months;
@@ -789,6 +812,7 @@ function calculateProjectionRows(monthlyCosts, monthlyRevenuesNoMembership, mont
 }
 
 function renderProjectionTable(rows) {
+  // Scrive le proiezioni nel corpo della tabella risultati.
   const tbody = document.getElementById("projectionTableBody");
   tbody.innerHTML = "";
 
@@ -809,6 +833,7 @@ function renderProjectionTable(rows) {
   Calcolo complessivo con BEP e suggerimenti per mantenere basso il tesseramento.
 */
 function calculate() {
+  // Motore centrale: combina ricavi, costi, tesseramento e KPI.
   const revenues = computeMonthlyRevenues();
   const costs = computeMonthlyCosts();
 
@@ -820,6 +845,7 @@ function calculate() {
   const breakEvenMembership =
     iscritti > 0 ? Math.max(0, deficitNoMembership / iscritti) : Number.POSITIVE_INFINITY;
 
+  // Quota minima suggerita: valore di sicurezza, configurabile dall'utente.
   const QUOTA_MINIMA_ANNUALE = Math.max(0, appState.membership.quotaMinimaAnnuale);
   const quotaSuggeritaAnnuale =
     deficitNoMembership <= 0
@@ -827,6 +853,7 @@ function calculate() {
       : Math.max(QUOTA_MINIMA_ANNUALE, Math.ceil(breakEvenMembership * 12));
   const bepRaggiunto = deficitNoMembership <= 0;
 
+  // Se il lock è attivo, prevale il valore bloccato; altrimenti si usa il BEP.
   const membershipApplied = appState.membership.lockEnabled
     ? appState.membership.lockValue
     : breakEvenMembership;
@@ -930,10 +957,12 @@ function calculate() {
 }
 
 function persistScenarios() {
+  // Salva i soli scenari nel localStorage del browser.
   localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.scenarios));
 }
 
 function loadScenariosFromStorage() {
+  // Recupera gli scenari salvati, gestendo dati mancanti o corrotti.
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
     appState.scenarios = [];
@@ -949,6 +978,7 @@ function loadScenariosFromStorage() {
 }
 
 function saveScenario() {
+  // Salva una fotografia completa dello stato corrente come scenario riutilizzabile.
   const scenarioNameInput = document.getElementById("scenarioName");
   const metrics = calculate();
   const name =
@@ -981,6 +1011,7 @@ function saveScenario() {
 }
 
 function loadScenario(scenarioId) {
+  // Ripristina lo stato di uno scenario salvato in precedenza.
   const scenario = appState.scenarios.find((item) => item.id === scenarioId);
   if (!scenario) {
     return;
@@ -1000,12 +1031,14 @@ function loadScenario(scenarioId) {
 }
 
 function deleteScenario(scenarioId) {
+  // Elimina uno scenario dall'archivio locale.
   appState.scenarios = appState.scenarios.filter((item) => item.id !== scenarioId);
   persistScenarios();
   renderScenarioList();
 }
 
 function renderScenarioList() {
+  // Renderizza la lista degli scenari salvati e le azioni disponibili.
   const tbody = document.getElementById("scenarioTableBody");
   tbody.innerHTML = "";
 
@@ -1055,12 +1088,14 @@ function renderScenarioList() {
 }
 
 function syncMembershipLockInputs() {
+  // Allinea i controlli del tesseramento allo stato corrente dell'app.
   document.getElementById("membershipLockEnabled").checked = appState.membership.lockEnabled;
   document.getElementById("membershipLockValue").value = String(appState.membership.lockValue);
   document.getElementById("membershipQuotaMinima").value = String(appState.membership.quotaMinimaAnnuale);
 }
 
 function wireGlobalControls() {
+  // Collega gli eventi globali che non appartengono a un singolo controllo schema.
   const addOperatorBtn = document.getElementById("addFixedOperatorBtn");
   const lockEnabled = document.getElementById("membershipLockEnabled");
   const lockValue = document.getElementById("membershipLockValue");
@@ -1092,6 +1127,7 @@ function wireGlobalControls() {
 }
 
 function init() {
+  // Sequenza di avvio: render, bind eventi, load scenari e primo calcolo.
   renderSchemaControls();
   renderFixedOperators();
   wireGlobalControls();
