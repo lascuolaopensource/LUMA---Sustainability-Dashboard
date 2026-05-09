@@ -71,7 +71,7 @@ const controlSchemas = [
         key: "postazioni_studio_mesi",
         label: "Postazioni Studio: mesi occupati",
         min: 1,
-        max: 12,
+        max: 24,
         step: 1,
         hasRange: true
       },
@@ -99,7 +99,7 @@ const controlSchemas = [
       },
       {
         key: "eventi_profit_mezze_giornate",
-        label: "Eventi Profit: numero mezze giornate",
+        label: "Eventi Profit: numero mezze giornate (al mese)",
         min: 0,
         max: 62,
         step: 1,
@@ -115,7 +115,7 @@ const controlSchemas = [
       },
       {
         key: "eventi_non_profit_mezze_giornate",
-        label: "Eventi Non Profit: numero mezze giornate",
+        label: "Eventi Non Profit: numero mezze giornate (al mese)",
         min: 0,
         max: 62,
         step: 1,
@@ -129,7 +129,7 @@ const controlSchemas = [
     fields: [
       {
         key: "conferenze_numero_mezze_giornate",
-        label: "Conferenze: numero mezze giornate",
+        label: "Conferenze: numero mezze giornate (al mese)",
         min: 0,
         max: 62,
         step: 1,
@@ -151,7 +151,7 @@ const controlSchemas = [
     fields: [
       {
         key: "corsi_numero_corsi",
-        label: "Corsi: numero corsi",
+        label: "Corsi: numero corsi (al mese)",
         min: 0,
         max: 100,
         step: 1,
@@ -189,7 +189,7 @@ const controlSchemas = [
     fields: [
       {
         key: "acqua",
-        label: "Acqua",
+        label: "Acqua (costo mensile)",
         min: 0,
         max: 5000,
         step: 5,
@@ -197,7 +197,7 @@ const controlSchemas = [
       },
       {
         key: "elettricita",
-        label: "Elettricita",
+        label: "Elettricità (costo mensile)",
         min: 0,
         max: 10000,
         step: 5,
@@ -205,7 +205,7 @@ const controlSchemas = [
       },
       {
         key: "gas",
-        label: "Gas",
+        label: "Gas (costo mensile)",
         min: 0,
         max: 10000,
         step: 5,
@@ -213,7 +213,7 @@ const controlSchemas = [
       },
       {
         key: "tari",
-        label: "TARI",
+        label: "TARI (quota mensile)",
         min: 0,
         max: 5000,
         step: 5,
@@ -221,7 +221,7 @@ const controlSchemas = [
       },
       {
         key: "assicurazione",
-        label: "Assicurazione",
+        label: "Assicurazione (quota mensile)",
         min: 0,
         max: 5000,
         step: 5,
@@ -237,7 +237,7 @@ const controlSchemas = [
       },
       {
         key: "pulizie_ore",
-        label: "Pulizie: numero ore",
+        label: "Pulizie: numero ore (mensili)",
         min: 0,
         max: 300,
         step: 1,
@@ -259,7 +259,7 @@ const controlSchemas = [
       },
       {
         key: "eventi_risorse_ore",
-        label: "Produzione eventi: ore risorse umane",
+        label: "Produzione eventi: ore risorse umane (mensili)",
         min: 0,
         max: 500,
         step: 1,
@@ -267,7 +267,7 @@ const controlSchemas = [
       },
       {
         key: "manutenzione_ordinaria",
-        label: "Manutenzione ordinaria",
+        label: "Manutenzione ordinaria (budget mensile)",
         min: 0,
         max: 10000,
         step: 10,
@@ -275,7 +275,7 @@ const controlSchemas = [
       },
       {
         key: "consumabili_attrezzoteca",
-        label: "Consumabili Attrezzoteca",
+        label: "Consumabili Attrezzoteca (budget mensile)",
         min: 0,
         max: 10000,
         step: 10,
@@ -838,7 +838,7 @@ function calculate() {
   summary.value = [
     `Uscite mensili totali: ${formatCurrency(monthlyCosts)}`,
     `Entrate mensili (senza tessera): ${formatCurrency(monthlyRevenuesNoMembership)}`,
-    `Break Even Point tessera (per iscritto): ${
+    `Punto di pareggio tessera (per iscritto): ${
       Number.isFinite(breakEvenMembership)
         ? formatCurrency(breakEvenMembership)
         : "N/A (iscritti = 0)"
@@ -864,7 +864,7 @@ function calculate() {
     ].join("\n");
   } else {
     lockDetails.value =
-      "Lock membership disattivato: il sistema applica automaticamente la quota di Break Even.";
+      "Lock membership disattivato: il sistema applica automaticamente la quota di Pareggio.";
   }
 
     const kpiBreakEven = document.getElementById("kpiBreakEven");
