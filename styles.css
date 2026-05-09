@@ -42,7 +42,8 @@ fieldset {
 
 legend,
 h1,
-h2 {
+h2,
+h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   font-weight: 700;
@@ -50,6 +51,11 @@ h2 {
 
 h1 {
   font-size: 1.1rem;
+}
+
+h3 {
+  margin-top: 0.9rem;
+  font-size: 0.95rem;
 }
 
 /* Griglie per controlli */
@@ -83,6 +89,23 @@ h1 {
   align-items: center;
 }
 
+.pair-single {
+  grid-template-columns: 1fr;
+}
+
+.toggles {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+}
+
 /* Stile neutro campi/bottoni */
 input[type="number"],
 input[type="text"],
@@ -104,6 +127,25 @@ input[type="range"] {
   gap: 0.5rem;
   grid-template-columns: 1fr auto;
   align-items: center;
+}
+
+.helper-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.list-block {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.operator-row {
+  border: 1px solid var(--border);
+  padding: 0.65rem;
+}
+
+.two-cols {
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
 }
 
 /* Utility spaziature */
@@ -146,4 +188,14 @@ td {
   display: flex;
   gap: 0.35rem;
   flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .inline {
+    grid-template-columns: 1fr;
+  }
+
+  .two-cols {
+    grid-template-columns: 1fr;
+  }
 }

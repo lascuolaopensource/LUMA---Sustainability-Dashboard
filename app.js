@@ -1,26 +1,20 @@
 "use strict";
 
 /*
-  STF - Logica del calcolatore in file separato.
-  Tutto lo stato dell'app vive in appState.
+  Stato centrale del simulatore STF.
+  Include valori economici, metadati per esclusione/lock e scenari salvati.
 */
 
-const STORAGE_KEY = "stf_scenari_v1";
+const STORAGE_KEY = "stf_scenari_v2";
 
-// Stato centrale dell'applicazione.
 const appState = {
-  costs: {
-    personale_fisso: 3000,
-    utenze: 900,
-    manutenzione_attrezzoteca: 400
-  },
   revenues: {
-    atelier_mesi_occupati: 10,
-    atelier_prezzo_mensile: 850,
-    eventi_giorni_profit: 4,
-    eventi_prezzo_profit: 600,
-    eventi_giorni_non_profit: 4,
-    eventi_prezzo_non_profit: 350,
+    postazioni_studio_mesi: 10,
+    postazioni_studio_costo_mensile: 850,
+    eventi_profit_prezzo_mezza: 300,
+    eventi_profit_mezze_giornate: 8,
+    eventi_non_profit_prezzo_mezza: 180,
+    eventi_non_profit_mezze_giornate: 8,
     conferenze_numero_mezze_giornate: 6,
     conferenze_prezzo_unitario: 250,
     corsi_numero_corsi: 4,
@@ -28,51 +22,284 @@ const appState = {
     corsi_prezzo_a_persona: 45,
     corsi_costo_vivo_per_corso: 180
   },
+  costsFixed: {
+    acqua: 120,
+    elettricita: 350,
+    gas: 220,
+    tari: 180,
+    assicurazione: 130,
+    pulizie_costo_orario: 18,
+    pulizie_ore: 30
+  },
+  costsVariable: {
+    eventi_risorse_costo_orario: 20,
+    eventi_risorse_ore: 24,
+    manutenzione_ordinaria: 200,
+    consumabili_attrezzoteca: 160
+  },
+  operatorsFixed: [
+    {
+      id: Date.now(),
+      nome: "Operatore 1",
+      costo_orario: 20,
+      ore: 80,
+      excluded: false,
+      locked: false
+    }
+  ],
   membership: {
     numero_iscritti: 120,
     lockEnabled: false,
     lockValue: 10
   },
+  fieldMeta: {},
   scenarios: []
 };
 
-// Schema dei campi da renderizzare con input number + slider.
-const inputSchema = [
+const projectionHorizons = [1, 6, 12, 24, 36];
+
+/*
+  Schemi di rendering per tutte le righe configurabili.
+  Ogni riga ha checkbox Escludi e checkbox Lock.
+*/
+const controlSchemas = [
   {
-    mountId: "fixedCosts",
-    group: "costs",
-    fields: [
-      ["personale_fisso", "Personale fisso", 0, 20000, 50],
-      ["utenze", "Utenze", 0, 5000, 10],
-      ["manutenzione_attrezzoteca", "Manutenzione attrezzoteca", 0, 5000, 10]
-    ]
-  },
-  {
-    mountId: "revenues",
+    mountId: "revenuesStudio",
     group: "revenues",
     fields: [
-      ["atelier_mesi_occupati", "Atelier: mesi occupati", 1, 12, 1],
-      ["atelier_prezzo_mensile", "Atelier: prezzo mensile", 0, 5000, 10],
-      ["eventi_giorni_profit", "Eventi aziendali: giorni profit", 0, 31, 1],
-      ["eventi_prezzo_profit", "Eventi aziendali: prezzo profit", 0, 5000, 10],
-      ["eventi_giorni_non_profit", "Eventi aziendali: giorni non profit", 0, 31, 1],
-      ["eventi_prezzo_non_profit", "Eventi aziendali: prezzo non profit", 0, 5000, 10],
-      ["conferenze_numero_mezze_giornate", "Conferenze: numero mezze giornate", 0, 62, 1],
-      ["conferenze_prezzo_unitario", "Conferenze: prezzo unitario", 0, 5000, 10],
-      ["corsi_numero_corsi", "Corsi: numero corsi", 0, 100, 1],
-      ["corsi_partecipanti_per_corso", "Corsi: partecipanti per corso", 0, 200, 1],
-      ["corsi_prezzo_a_persona", "Corsi: prezzo a persona", 0, 1000, 1],
-      ["corsi_costo_vivo_per_corso", "Corsi: costo vivo per corso", 0, 20000, 10]
+      {
+        key: "postazioni_studio_mesi",
+        label: "Postazioni Studio: mesi occupati",
+        min: 1,
+        max: 12,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "postazioni_studio_costo_mensile",
+        label: "Postazioni Studio: costo mensile",
+        min: 0,
+        max: 5000,
+        step: 10,
+        hasRange: true
+      }
     ]
   },
   {
-    mountId: "membership",
+    mountId: "revenuesEvents",
+    group: "revenues",
+    fields: [
+      {
+        key: "eventi_profit_prezzo_mezza",
+        label: "Eventi Profit: prezzo per mezza giornata",
+        min: 0,
+        max: 5000,
+        step: 10,
+        hasRange: true
+      },
+      {
+        key: "eventi_profit_mezze_giornate",
+        label: "Eventi Profit: numero mezze giornate",
+        min: 0,
+        max: 62,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "eventi_non_profit_prezzo_mezza",
+        label: "Eventi Non Profit: prezzo per mezza giornata",
+        min: 0,
+        max: 5000,
+        step: 10,
+        hasRange: true
+      },
+      {
+        key: "eventi_non_profit_mezze_giornate",
+        label: "Eventi Non Profit: numero mezze giornate",
+        min: 0,
+        max: 62,
+        step: 1,
+        hasRange: true
+      }
+    ]
+  },
+  {
+    mountId: "revenuesConference",
+    group: "revenues",
+    fields: [
+      {
+        key: "conferenze_numero_mezze_giornate",
+        label: "Conferenze: numero mezze giornate",
+        min: 0,
+        max: 62,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "conferenze_prezzo_unitario",
+        label: "Conferenze: prezzo unitario mezza giornata",
+        min: 0,
+        max: 5000,
+        step: 10,
+        hasRange: true
+      }
+    ]
+  },
+  {
+    mountId: "revenuesCourses",
+    group: "revenues",
+    fields: [
+      {
+        key: "corsi_numero_corsi",
+        label: "Corsi: numero corsi",
+        min: 0,
+        max: 100,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "corsi_partecipanti_per_corso",
+        label: "Corsi: partecipanti per corso",
+        min: 0,
+        max: 200,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "corsi_prezzo_a_persona",
+        label: "Corsi: prezzo a persona",
+        min: 0,
+        max: 1000,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "corsi_costo_vivo_per_corso",
+        label: "Corsi: costi vivi per corso",
+        min: 0,
+        max: 20000,
+        step: 10,
+        hasRange: true
+      }
+    ]
+  },
+  {
+    mountId: "fixedCosts",
+    group: "costsFixed",
+    fields: [
+      {
+        key: "acqua",
+        label: "Acqua",
+        min: 0,
+        max: 5000,
+        step: 5,
+        hasRange: false
+      },
+      {
+        key: "elettricita",
+        label: "Elettricita",
+        min: 0,
+        max: 10000,
+        step: 5,
+        hasRange: false
+      },
+      {
+        key: "gas",
+        label: "Gas",
+        min: 0,
+        max: 10000,
+        step: 5,
+        hasRange: false
+      },
+      {
+        key: "tari",
+        label: "TARI",
+        min: 0,
+        max: 5000,
+        step: 5,
+        hasRange: false
+      },
+      {
+        key: "assicurazione",
+        label: "Assicurazione",
+        min: 0,
+        max: 5000,
+        step: 5,
+        hasRange: false
+      },
+      {
+        key: "pulizie_costo_orario",
+        label: "Pulizie: costo orario",
+        min: 0,
+        max: 100,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "pulizie_ore",
+        label: "Pulizie: numero ore",
+        min: 0,
+        max: 300,
+        step: 1,
+        hasRange: true
+      }
+    ]
+  },
+  {
+    mountId: "variableCosts",
+    group: "costsVariable",
+    fields: [
+      {
+        key: "eventi_risorse_costo_orario",
+        label: "Produzione eventi: costo orario risorse umane",
+        min: 0,
+        max: 200,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "eventi_risorse_ore",
+        label: "Produzione eventi: ore risorse umane",
+        min: 0,
+        max: 500,
+        step: 1,
+        hasRange: true
+      },
+      {
+        key: "manutenzione_ordinaria",
+        label: "Manutenzione ordinaria",
+        min: 0,
+        max: 10000,
+        step: 10,
+        hasRange: true
+      },
+      {
+        key: "consumabili_attrezzoteca",
+        label: "Consumabili Attrezzoteca",
+        min: 0,
+        max: 10000,
+        step: 10,
+        hasRange: true
+      }
+    ]
+  },
+  {
+    mountId: "membershipInputs",
     group: "membership",
-    fields: [["numero_iscritti", "Numero iscritti", 0, 10000, 1]]
+    fields: [
+      {
+        key: "numero_iscritti",
+        label: "Numero iscritti",
+        min: 0,
+        max: 10000,
+        step: 1,
+        hasRange: true,
+        excludeDisabled: true
+      }
+    ]
   }
 ];
 
-// Formattazione uniforme in EUR per tutti i risultati economici.
 function formatCurrency(value) {
   return Number(value || 0).toLocaleString("it-IT", {
     style: "currency",
@@ -81,50 +308,97 @@ function formatCurrency(value) {
   });
 }
 
-// Crea una riga di controllo composta da input numerico e slider sincronizzati.
-function createControlRow(group, key, labelText, min, max, step) {
+function fieldId(group, key) {
+  return `${group}.${key}`;
+}
+
+function getFieldMeta(id) {
+  if (!appState.fieldMeta[id]) {
+    appState.fieldMeta[id] = { excluded: false, locked: false };
+  }
+  return appState.fieldMeta[id];
+}
+
+function isFieldIncluded(group, key) {
+  const meta = getFieldMeta(fieldId(group, key));
+  return !meta.excluded;
+}
+
+function isFieldLocked(group, key) {
+  const meta = getFieldMeta(fieldId(group, key));
+  return !!meta.locked;
+}
+
+function clampValue(raw, min, max) {
+  let value = Number(raw);
+  if (Number.isNaN(value)) {
+    value = min;
+  }
+  if (value < min) {
+    value = min;
+  }
+  if (value > max) {
+    value = max;
+  }
+  return value;
+}
+
+/*
+  Riga base per input numerico con eventuale slider,
+  esclusione dal totale e lock del dato.
+*/
+function createControlRow(group, field) {
+  const { key, label, min, max, step, hasRange, excludeDisabled } = field;
+  const id = fieldId(group, key);
+  const meta = getFieldMeta(id);
+
   const row = document.createElement("div");
   row.className = "control-row";
 
-  const label = document.createElement("label");
-  label.setAttribute("for", `${group}_${key}_number`);
-  label.textContent = labelText;
+  const labelEl = document.createElement("label");
+  labelEl.textContent = label;
+  labelEl.setAttribute("for", `${id}_number`);
 
   const pair = document.createElement("div");
-  pair.className = "pair";
+  pair.className = hasRange ? "pair" : "pair pair-single";
 
   const numberInput = document.createElement("input");
   numberInput.type = "number";
-  numberInput.id = `${group}_${key}_number`;
+  numberInput.id = `${id}_number`;
   numberInput.min = String(min);
   numberInput.max = String(max);
   numberInput.step = String(step);
   numberInput.value = String(appState[group][key]);
 
-  const rangeInput = document.createElement("input");
-  rangeInput.type = "range";
-  rangeInput.id = `${group}_${key}_range`;
-  rangeInput.min = String(min);
-  rangeInput.max = String(max);
-  rangeInput.step = String(step);
-  rangeInput.value = String(appState[group][key]);
+  let rangeInput = null;
+  if (hasRange) {
+    rangeInput = document.createElement("input");
+    rangeInput.type = "range";
+    rangeInput.id = `${id}_range`;
+    rangeInput.min = String(min);
+    rangeInput.max = String(max);
+    rangeInput.step = String(step);
+    rangeInput.value = String(appState[group][key]);
+  }
 
-  // Normalizza il valore, aggiorna stato centrale e rilancia il calcolo.
+  function setRowDisabled() {
+    const isLocked = !!meta.locked;
+    numberInput.disabled = isLocked;
+    if (rangeInput) {
+      rangeInput.disabled = isLocked;
+    }
+  }
+
   function applyValue(rawValue) {
-    let value = Number(rawValue);
-    if (Number.isNaN(value)) {
-      value = min;
+    if (isFieldLocked(group, key)) {
+      return;
     }
-    if (value < min) {
-      value = min;
-    }
-    if (value > max) {
-      value = max;
-    }
-
+    const value = clampValue(rawValue, min, max);
     appState[group][key] = value;
     numberInput.value = String(value);
-    rangeInput.value = String(value);
+    if (rangeInput) {
+      rangeInput.value = String(value);
+    }
     calculate();
   }
 
@@ -132,124 +406,489 @@ function createControlRow(group, key, labelText, min, max, step) {
     applyValue(event.target.value);
   });
 
-  rangeInput.addEventListener("input", (event) => {
-    applyValue(event.target.value);
-  });
+  if (rangeInput) {
+    rangeInput.addEventListener("input", (event) => {
+      applyValue(event.target.value);
+    });
+  }
 
   pair.appendChild(numberInput);
-  pair.appendChild(rangeInput);
-  row.appendChild(label);
+  if (rangeInput) {
+    pair.appendChild(rangeInput);
+  }
+
+  const toggles = document.createElement("div");
+  toggles.className = "toggles";
+
+  const excludeLabel = document.createElement("label");
+  const excludeInput = document.createElement("input");
+  excludeInput.type = "checkbox";
+  excludeInput.checked = meta.excluded;
+  excludeInput.disabled = !!excludeDisabled;
+  excludeInput.addEventListener("change", (event) => {
+    meta.excluded = event.target.checked;
+    calculate();
+  });
+  excludeLabel.appendChild(excludeInput);
+  excludeLabel.append(" Escludi");
+
+  const lockLabel = document.createElement("label");
+  const lockInput = document.createElement("input");
+  lockInput.type = "checkbox";
+  lockInput.checked = meta.locked;
+  lockInput.addEventListener("change", (event) => {
+    meta.locked = event.target.checked;
+    setRowDisabled();
+    calculate();
+  });
+  lockLabel.appendChild(lockInput);
+  lockLabel.append(" Lock");
+
+  toggles.appendChild(excludeLabel);
+  toggles.appendChild(lockLabel);
+
+  row.appendChild(labelEl);
   row.appendChild(pair);
+  row.appendChild(toggles);
+  setRowDisabled();
 
   return row;
 }
 
-// Renderizza tutti i controlli definiti nello schema.
-function renderControls() {
-  inputSchema.forEach((section) => {
-    const mount = document.getElementById(section.mountId);
-    section.fields.forEach((field) => {
-      const [key, label, min, max, step] = field;
-      mount.appendChild(createControlRow(section.group, key, label, min, max, step));
+function renderSchemaControls() {
+  controlSchemas.forEach((schema) => {
+    const mount = document.getElementById(schema.mountId);
+    mount.innerHTML = "";
+    schema.fields.forEach((field) => {
+      mount.appendChild(createControlRow(schema.group, field));
     });
   });
 }
 
-// Calcola le entrate non derivanti dal tesseramento.
-function computeRevenues() {
+/*
+  Gestione dinamica operatori fissi.
+  Ogni operatore e una riga costo con esclusione e lock.
+*/
+function addFixedOperator() {
+  const nextNumber = appState.operatorsFixed.length + 1;
+  appState.operatorsFixed.push({
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    nome: `Operatore ${nextNumber}`,
+    costo_orario: 20,
+    ore: 80,
+    excluded: false,
+    locked: false
+  });
+  renderFixedOperators();
+  calculate();
+}
+
+function deleteFixedOperator(operatorId) {
+  appState.operatorsFixed = appState.operatorsFixed.filter((item) => item.id !== operatorId);
+  renderFixedOperators();
+  calculate();
+}
+
+function renderFixedOperators() {
+  const mount = document.getElementById("fixedOperatorsList");
+  mount.innerHTML = "";
+
+  if (appState.operatorsFixed.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "helper-text";
+    empty.textContent = "Nessun operatore fisso inserito.";
+    mount.appendChild(empty);
+    return;
+  }
+
+  appState.operatorsFixed.forEach((operator) => {
+    const row = document.createElement("div");
+    row.className = "operator-row";
+
+    const top = document.createElement("div");
+    top.className = "inline";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = operator.nome;
+    nameInput.addEventListener("input", (event) => {
+      if (operator.locked) {
+        nameInput.value = operator.nome;
+        return;
+      }
+      operator.nome = event.target.value;
+      renderScenarioList();
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.textContent = "Rimuovi";
+    removeBtn.disabled = operator.locked;
+    removeBtn.addEventListener("click", () => {
+      deleteFixedOperator(operator.id);
+    });
+
+    top.appendChild(nameInput);
+    top.appendChild(removeBtn);
+
+    const controls = document.createElement("div");
+    controls.className = "grid two-cols mt-sm";
+
+    const costoBlock = document.createElement("div");
+    costoBlock.className = "control-row";
+    const costoLabel = document.createElement("label");
+    costoLabel.textContent = "Costo orario";
+    const costoNumber = document.createElement("input");
+    costoNumber.type = "number";
+    costoNumber.min = "0";
+    costoNumber.max = "200";
+    costoNumber.step = "1";
+    costoNumber.value = String(operator.costo_orario);
+    const costoRange = document.createElement("input");
+    costoRange.type = "range";
+    costoRange.min = "0";
+    costoRange.max = "200";
+    costoRange.step = "1";
+    costoRange.value = String(operator.costo_orario);
+    costoBlock.appendChild(costoLabel);
+    costoBlock.appendChild(costoNumber);
+    costoBlock.appendChild(costoRange);
+
+    const oreBlock = document.createElement("div");
+    oreBlock.className = "control-row";
+    const oreLabel = document.createElement("label");
+    oreLabel.textContent = "Ore mensili";
+    const oreNumber = document.createElement("input");
+    oreNumber.type = "number";
+    oreNumber.min = "0";
+    oreNumber.max = "400";
+    oreNumber.step = "1";
+    oreNumber.value = String(operator.ore);
+    const oreRange = document.createElement("input");
+    oreRange.type = "range";
+    oreRange.min = "0";
+    oreRange.max = "400";
+    oreRange.step = "1";
+    oreRange.value = String(operator.ore);
+    oreBlock.appendChild(oreLabel);
+    oreBlock.appendChild(oreNumber);
+    oreBlock.appendChild(oreRange);
+
+    function syncOperatorValues(rawCost, rawHours) {
+      if (operator.locked) {
+        return;
+      }
+      if (rawCost !== null) {
+        operator.costo_orario = clampValue(rawCost, 0, 200);
+        costoNumber.value = String(operator.costo_orario);
+        costoRange.value = String(operator.costo_orario);
+      }
+      if (rawHours !== null) {
+        operator.ore = clampValue(rawHours, 0, 400);
+        oreNumber.value = String(operator.ore);
+        oreRange.value = String(operator.ore);
+      }
+      calculate();
+    }
+
+    costoNumber.addEventListener("input", (event) => {
+      syncOperatorValues(event.target.value, null);
+    });
+    costoRange.addEventListener("input", (event) => {
+      syncOperatorValues(event.target.value, null);
+    });
+    oreNumber.addEventListener("input", (event) => {
+      syncOperatorValues(null, event.target.value);
+    });
+    oreRange.addEventListener("input", (event) => {
+      syncOperatorValues(null, event.target.value);
+    });
+
+    controls.appendChild(costoBlock);
+    controls.appendChild(oreBlock);
+
+    const toggles = document.createElement("div");
+    toggles.className = "toggles mt-sm";
+    const excludeLabel = document.createElement("label");
+    const excludeInput = document.createElement("input");
+    excludeInput.type = "checkbox";
+    excludeInput.checked = operator.excluded;
+    excludeInput.addEventListener("change", (event) => {
+      operator.excluded = event.target.checked;
+      calculate();
+    });
+    excludeLabel.appendChild(excludeInput);
+    excludeLabel.append(" Escludi");
+
+    const lockLabel = document.createElement("label");
+    const lockInput = document.createElement("input");
+    lockInput.type = "checkbox";
+    lockInput.checked = operator.locked;
+    lockInput.addEventListener("change", (event) => {
+      operator.locked = event.target.checked;
+      renderFixedOperators();
+      calculate();
+    });
+    lockLabel.appendChild(lockInput);
+    lockLabel.append(" Lock");
+
+    toggles.appendChild(excludeLabel);
+    toggles.appendChild(lockLabel);
+
+    costoNumber.disabled = operator.locked;
+    costoRange.disabled = operator.locked;
+    oreNumber.disabled = operator.locked;
+    oreRange.disabled = operator.locked;
+    nameInput.disabled = operator.locked;
+
+    row.appendChild(top);
+    row.appendChild(controls);
+    row.appendChild(toggles);
+    mount.appendChild(row);
+  });
+}
+
+/*
+  Calcola entrate mensili escludendo automaticamente le righe disattivate.
+*/
+function computeMonthlyRevenues() {
   const r = appState.revenues;
 
-  const atelier = r.atelier_mesi_occupati * r.atelier_prezzo_mensile;
-  const eventi =
-    r.eventi_giorni_profit * r.eventi_prezzo_profit +
-    r.eventi_giorni_non_profit * r.eventi_prezzo_non_profit;
-  const conferenze = r.conferenze_numero_mezze_giornate * r.conferenze_prezzo_unitario;
+  const studio =
+    isFieldIncluded("revenues", "postazioni_studio_mesi") &&
+    isFieldIncluded("revenues", "postazioni_studio_costo_mensile")
+      ? r.postazioni_studio_mesi * r.postazioni_studio_costo_mensile
+      : 0;
 
-  // Logica corsi: 10% del lordo meno i costi vivi per corso.
-  const corsoLordoPerCorso = r.corsi_partecipanti_per_corso * r.corsi_prezzo_a_persona;
-  const quotaSpazioPerCorso = corsoLordoPerCorso * 0.1 - r.corsi_costo_vivo_per_corso;
-  const corsi = r.corsi_numero_corsi * quotaSpazioPerCorso;
+  const eventiProfit =
+    isFieldIncluded("revenues", "eventi_profit_prezzo_mezza") &&
+    isFieldIncluded("revenues", "eventi_profit_mezze_giornate")
+      ? r.eventi_profit_prezzo_mezza * r.eventi_profit_mezze_giornate
+      : 0;
+
+  const eventiNonProfit =
+    isFieldIncluded("revenues", "eventi_non_profit_prezzo_mezza") &&
+    isFieldIncluded("revenues", "eventi_non_profit_mezze_giornate")
+      ? r.eventi_non_profit_prezzo_mezza * r.eventi_non_profit_mezze_giornate
+      : 0;
+
+  const conferenze =
+    isFieldIncluded("revenues", "conferenze_numero_mezze_giornate") &&
+    isFieldIncluded("revenues", "conferenze_prezzo_unitario")
+      ? r.conferenze_numero_mezze_giornate * r.conferenze_prezzo_unitario
+      : 0;
+
+  const corsiLordo =
+    isFieldIncluded("revenues", "corsi_numero_corsi") &&
+    isFieldIncluded("revenues", "corsi_partecipanti_per_corso") &&
+    isFieldIncluded("revenues", "corsi_prezzo_a_persona")
+      ? r.corsi_numero_corsi * r.corsi_partecipanti_per_corso * r.corsi_prezzo_a_persona
+      : 0;
+
+  const corsiCostiVivi =
+    isFieldIncluded("revenues", "corsi_numero_corsi") &&
+    isFieldIncluded("revenues", "corsi_costo_vivo_per_corso")
+      ? r.corsi_numero_corsi * r.corsi_costo_vivo_per_corso
+    : 0;
+
+  const corsi = corsiLordo * 0.1 - corsiCostiVivi;
 
   return {
-    atelier,
-    eventi,
+    studio,
+    eventiProfit,
+    eventiNonProfit,
     conferenze,
     corsi,
-    totaleAltreEntrate: atelier + eventi + conferenze + corsi
+    total: studio + eventiProfit + eventiNonProfit + conferenze + corsi
   };
 }
 
-// Funzione principale: calcola sostenibilità, membership ideale e gap eventuale.
+/*
+  Calcola uscite mensili suddivise in costi fissi, risorse fisse e variabili.
+*/
+function computeMonthlyCosts() {
+  const f = appState.costsFixed;
+  const v = appState.costsVariable;
+
+  const utilities = ["acqua", "elettricita", "gas", "tari", "assicurazione"].reduce(
+    (acc, key) => (isFieldIncluded("costsFixed", key) ? acc + f[key] : acc),
+    0
+  );
+
+  const pulizie =
+    isFieldIncluded("costsFixed", "pulizie_costo_orario") &&
+    isFieldIncluded("costsFixed", "pulizie_ore")
+      ? f.pulizie_costo_orario * f.pulizie_ore
+      : 0;
+
+  const resourcesFixed = appState.operatorsFixed.reduce((acc, operator) => {
+    if (operator.excluded) {
+      return acc;
+    }
+    return acc + operator.costo_orario * operator.ore;
+  }, 0);
+
+  const variableEventResources =
+    isFieldIncluded("costsVariable", "eventi_risorse_costo_orario") &&
+    isFieldIncluded("costsVariable", "eventi_risorse_ore")
+      ? v.eventi_risorse_costo_orario * v.eventi_risorse_ore
+      : 0;
+
+  const manutenzione = isFieldIncluded("costsVariable", "manutenzione_ordinaria")
+    ? v.manutenzione_ordinaria
+    : 0;
+
+  const consumabili = isFieldIncluded("costsVariable", "consumabili_attrezzoteca")
+    ? v.consumabili_attrezzoteca
+    : 0;
+
+  return {
+    utilities,
+    pulizie,
+    resourcesFixed,
+    variableEventResources,
+    manutenzione,
+    consumabili,
+    total:
+      utilities +
+      pulizie +
+      resourcesFixed +
+      variableEventResources +
+      manutenzione +
+      consumabili
+  };
+}
+
+function calculateProjectionRows(monthlyCosts, monthlyRevenuesNoMembership, monthlyMembershipRevenues) {
+  return projectionHorizons.map((months) => {
+    const totalCosts = monthlyCosts * months;
+    const totalNoMembership = monthlyRevenuesNoMembership * months;
+    const totalMembership = monthlyMembershipRevenues * months;
+    const saldo = totalNoMembership + totalMembership - totalCosts;
+
+    return {
+      months,
+      totalCosts,
+      totalNoMembership,
+      totalMembership,
+      saldo
+    };
+  });
+}
+
+function renderProjectionTable(rows) {
+  const tbody = document.getElementById("projectionTableBody");
+  tbody.innerHTML = "";
+
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.months} mesi</td>
+      <td>${formatCurrency(row.totalCosts)}</td>
+      <td>${formatCurrency(row.totalNoMembership)}</td>
+      <td>${formatCurrency(row.totalMembership)}</td>
+      <td>${formatCurrency(row.saldo)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/*
+  Calcolo complessivo con BEP e suggerimenti per mantenere basso il tesseramento.
+*/
 function calculate() {
-  const c = appState.costs;
-  const m = appState.membership;
-  const rev = computeRevenues();
+  const revenues = computeMonthlyRevenues();
+  const costs = computeMonthlyCosts();
 
-  const totaleUscite = c.personale_fisso + c.utenze + c.manutenzione_attrezzoteca;
-  const deficitSenzaTesseramento = totaleUscite - rev.totaleAltreEntrate;
+  const monthlyCosts = costs.total;
+  const monthlyRevenuesNoMembership = revenues.total;
+  const deficitNoMembership = monthlyCosts - monthlyRevenuesNoMembership;
 
-  const iscritti = m.numero_iscritti;
-  const costoMembershipIdeale =
-    iscritti > 0 ? deficitSenzaTesseramento / iscritti : Number.POSITIVE_INFINITY;
+  const iscritti = appState.membership.numero_iscritti;
+  const breakEvenMembership =
+    iscritti > 0 ? Math.max(0, deficitNoMembership / iscritti) : Number.POSITIVE_INFINITY;
 
-  // Se lock attivo, prevale il valore bloccato dall'utente.
-  const membershipApplicata = m.lockEnabled ? m.lockValue : costoMembershipIdeale;
-  const totaleEntrateConMembership =
-    rev.totaleAltreEntrate +
-    iscritti * (Number.isFinite(membershipApplicata) ? membershipApplicata : 0);
-  const saldoFinale = totaleEntrateConMembership - totaleUscite;
+  const membershipApplied = appState.membership.lockEnabled
+    ? appState.membership.lockValue
+    : breakEvenMembership;
 
-  // Gap residuo da coprire con altre attivita.
-  const extraNecessario = saldoFinale < 0 ? Math.abs(saldoFinale) : 0;
-  const prezzoConferenza = appState.revenues.conferenze_prezzo_unitario;
-  const conferenzeExtra =
-    prezzoConferenza > 0 ? Math.ceil(extraNecessario / prezzoConferenza) : null;
+  const monthlyMembershipRevenues =
+    isFieldIncluded("membership", "numero_iscritti") && Number.isFinite(membershipApplied)
+      ? iscritti * membershipApplied
+      : 0;
+
+  const monthlyBalance = monthlyRevenuesNoMembership + monthlyMembershipRevenues - monthlyCosts;
+  const extraNeeded = monthlyBalance < 0 ? Math.abs(monthlyBalance) : 0;
+
+  const conferenceUnitRevenue =
+    appState.revenues.conferenze_prezzo_unitario > 0
+      ? appState.revenues.conferenze_prezzo_unitario
+      : 0;
+  const conferencesExtraForParity =
+    conferenceUnitRevenue > 0 ? Math.ceil(extraNeeded / conferenceUnitRevenue) : null;
+
+  const breakEvenIscrittiAtLock =
+    appState.membership.lockEnabled && appState.membership.lockValue > 0
+      ? Math.ceil(Math.max(0, deficitNoMembership) / appState.membership.lockValue)
+      : null;
 
   const summary = document.getElementById("summary");
   summary.value = [
-    `Totale uscite: ${formatCurrency(totaleUscite)}`,
-    `Totale altre entrate: ${formatCurrency(rev.totaleAltreEntrate)}`,
-    `Deficit (senza tesseramento): ${formatCurrency(deficitSenzaTesseramento)}`,
-    `Costo membership ideale: ${
-      Number.isFinite(costoMembershipIdeale)
-        ? formatCurrency(costoMembershipIdeale)
+    `Uscite mensili totali: ${formatCurrency(monthlyCosts)}`,
+    `Entrate mensili (senza tessera): ${formatCurrency(monthlyRevenuesNoMembership)}`,
+    `Break Even Point tessera (per iscritto): ${
+      Number.isFinite(breakEvenMembership)
+        ? formatCurrency(breakEvenMembership)
         : "N/A (iscritti = 0)"
     }`,
-    `Costo membership applicato: ${
-      Number.isFinite(membershipApplicata) ? formatCurrency(membershipApplicata) : "N/A"
-    }`,
-    `Saldo finale: ${formatCurrency(saldoFinale)}`
+    `Tessera applicata: ${formatCurrency(membershipApplied)}`,
+    `Saldo mensile: ${formatCurrency(monthlyBalance)}`,
+    "Obiettivo: mantenere il tesseramento basso aumentando entrate autonome o riducendo costi inclusi."
   ].join("\n");
 
   const lockDetails = document.getElementById("lockDetails");
-  if (m.lockEnabled) {
+  if (appState.membership.lockEnabled) {
     lockDetails.value = [
-      `LOCK ATTIVO a ${formatCurrency(m.lockValue)} per iscritto`,
-      `Extra fatturato richiesto per pareggio: ${formatCurrency(extraNecessario)}`,
-      `Equivalente conferenze extra (stima): ${
-        conferenzeExtra === null
+      `LOCK MEMBERSHIP ATTIVO a ${formatCurrency(appState.membership.lockValue)} per iscritto.`,
+      `Extra fatturato necessario per pareggio: ${formatCurrency(extraNeeded)}`,
+      `Conferenze extra stimate per pareggio: ${
+        conferencesExtraForParity === null
           ? "impossibile (prezzo conferenza = 0)"
-          : conferenzeExtra
+          : conferencesExtraForParity
+      }`,
+      `Iscritti minimi per pareggio a lock corrente: ${
+        breakEvenIscrittiAtLock === null ? "N/A" : breakEvenIscrittiAtLock
       }`
     ].join("\n");
   } else {
     lockDetails.value =
-      "Lock disattivato: la membership viene calcolata automaticamente sul pareggio.";
+      "Lock membership disattivato: il sistema applica automaticamente la quota di Break Even.";
   }
 
+  const projectionRows = calculateProjectionRows(
+    monthlyCosts,
+    monthlyRevenuesNoMembership,
+    monthlyMembershipRevenues
+  );
+  renderProjectionTable(projectionRows);
+
   return {
-    totaleUscite,
-    ...rev,
-    deficitSenzaTesseramento,
-    costoMembershipIdeale,
-    membershipApplicata,
-    saldoFinale,
-    extraNecessario,
-    conferenzeExtra
+    monthlyCosts,
+    monthlyRevenuesNoMembership,
+    deficitNoMembership,
+    breakEvenMembership,
+    membershipApplied,
+    monthlyMembershipRevenues,
+    monthlyBalance,
+    extraNeeded,
+    breakEvenIscrittiAtLock
   };
 }
 
-// Legge gli scenari persistiti nel browser.
+function persistScenarios() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.scenarios));
+}
+
 function loadScenariosFromStorage() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
@@ -265,84 +904,63 @@ function loadScenariosFromStorage() {
   }
 }
 
-// Persiste l'array scenari in localStorage.
-function persistScenarios() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.scenarios));
-}
-
-// Salva uno snapshot completo di stato + metriche correnti.
 function saveScenario() {
-  const nameInput = document.getElementById("scenarioName");
-  const name = nameInput.value.trim() || `Scenario ${new Date().toLocaleString("it-IT")}`;
-  const snapshot = JSON.parse(JSON.stringify(appState));
+  const scenarioNameInput = document.getElementById("scenarioName");
   const metrics = calculate();
+  const name =
+    scenarioNameInput.value.trim() || `Scenario ${new Date().toLocaleString("it-IT")}`;
 
-  const scenario = {
+  const snapshot = {
+    revenues: { ...appState.revenues },
+    costsFixed: { ...appState.costsFixed },
+    costsVariable: { ...appState.costsVariable },
+    operatorsFixed: appState.operatorsFixed.map((item) => ({ ...item })),
+    membership: { ...appState.membership },
+    fieldMeta: JSON.parse(JSON.stringify(appState.fieldMeta))
+  };
+
+  appState.scenarios.unshift({
     id: Date.now(),
     name,
     savedAt: new Date().toISOString(),
-    state: {
-      costs: snapshot.costs,
-      revenues: snapshot.revenues,
-      membership: snapshot.membership
-    },
+    state: snapshot,
     metrics: {
-      deficitSenzaTesseramento: metrics.deficitSenzaTesseramento,
-      membershipApplicata: metrics.membershipApplicata,
-      saldoFinale: metrics.saldoFinale
+      membershipApplied: metrics.membershipApplied,
+      breakEvenMembership: metrics.breakEvenMembership,
+      monthlyBalance: metrics.monthlyBalance
     }
-  };
-
-  appState.scenarios.unshift(scenario);
-  persistScenarios();
-  renderScenarioList();
-  nameInput.value = "";
-}
-
-// Aggiorna i valori degli input a partire da appState (utile dopo load scenario).
-function applyStateToInputs() {
-  inputSchema.forEach((section) => {
-    section.fields.forEach((field) => {
-      const key = field[0];
-      const value = appState[section.group][key];
-      const n = document.getElementById(`${section.group}_${key}_number`);
-      const r = document.getElementById(`${section.group}_${key}_range`);
-      if (n) {
-        n.value = String(value);
-      }
-      if (r) {
-        r.value = String(value);
-      }
-    });
   });
 
-  document.getElementById("membershipLockEnabled").checked = appState.membership.lockEnabled;
-  document.getElementById("membershipLockValue").value = String(appState.membership.lockValue);
+  persistScenarios();
+  renderScenarioList();
+  scenarioNameInput.value = "";
 }
 
-// Carica uno scenario salvato e ricalcola i risultati.
 function loadScenario(scenarioId) {
   const scenario = appState.scenarios.find((item) => item.id === scenarioId);
   if (!scenario) {
     return;
   }
 
-  appState.costs = { ...scenario.state.costs };
   appState.revenues = { ...scenario.state.revenues };
+  appState.costsFixed = { ...scenario.state.costsFixed };
+  appState.costsVariable = { ...scenario.state.costsVariable };
+  appState.operatorsFixed = scenario.state.operatorsFixed.map((item) => ({ ...item }));
   appState.membership = { ...scenario.state.membership };
+  appState.fieldMeta = JSON.parse(JSON.stringify(scenario.state.fieldMeta || {}));
 
-  applyStateToInputs();
+  renderSchemaControls();
+  renderFixedOperators();
+  syncMembershipLockInputs();
   calculate();
 }
 
-// Elimina uno scenario dalla lista persistita.
 function deleteScenario(scenarioId) {
   appState.scenarios = appState.scenarios.filter((item) => item.id !== scenarioId);
   persistScenarios();
   renderScenarioList();
 }
 
-// Disegna la tabella scenari con azioni carica/elimina.
 function renderScenarioList() {
   const tbody = document.getElementById("scenarioTableBody");
   tbody.innerHTML = "";
@@ -359,16 +977,11 @@ function renderScenarioList() {
 
   appState.scenarios.forEach((scenario) => {
     const row = document.createElement("tr");
-
-    const lockText = scenario.state.membership.lockEnabled
-      ? formatCurrency(scenario.state.membership.lockValue)
-      : "Auto";
-
     row.innerHTML = `
       <td>${scenario.name}</td>
-      <td>${scenario.state.membership.numero_iscritti}</td>
-      <td>${lockText}</td>
-      <td>${formatCurrency(scenario.metrics.deficitSenzaTesseramento)}</td>
+      <td>${formatCurrency(scenario.metrics.membershipApplied)}</td>
+      <td>${formatCurrency(scenario.metrics.breakEvenMembership)}</td>
+      <td>${formatCurrency(scenario.metrics.monthlyBalance)}</td>
       <td></td>
     `;
 
@@ -383,25 +996,32 @@ function renderScenarioList() {
       loadScenario(scenario.id);
     });
 
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.textContent = "Elimina";
-    delBtn.addEventListener("click", () => {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.textContent = "Elimina";
+    deleteBtn.addEventListener("click", () => {
       deleteScenario(scenario.id);
     });
 
     actions.appendChild(loadBtn);
-    actions.appendChild(delBtn);
+    actions.appendChild(deleteBtn);
     actionsCell.appendChild(actions);
     tbody.appendChild(row);
   });
 }
 
-// Collega lock membership e pulsante di salvataggio agli handler.
+function syncMembershipLockInputs() {
+  document.getElementById("membershipLockEnabled").checked = appState.membership.lockEnabled;
+  document.getElementById("membershipLockValue").value = String(appState.membership.lockValue);
+}
+
 function wireGlobalControls() {
+  const addOperatorBtn = document.getElementById("addFixedOperatorBtn");
   const lockEnabled = document.getElementById("membershipLockEnabled");
   const lockValue = document.getElementById("membershipLockValue");
-  const saveBtn = document.getElementById("saveScenarioBtn");
+  const saveScenarioBtn = document.getElementById("saveScenarioBtn");
+
+  addOperatorBtn.addEventListener("click", addFixedOperator);
 
   lockEnabled.addEventListener("change", (event) => {
     appState.membership.lockEnabled = event.target.checked;
@@ -411,21 +1031,20 @@ function wireGlobalControls() {
   lockValue.addEventListener("input", (event) => {
     const value = Number(event.target.value);
     appState.membership.lockValue = Number.isNaN(value) || value < 0 ? 0 : value;
-    if (String(appState.membership.lockValue) !== event.target.value) {
-      event.target.value = String(appState.membership.lockValue);
-    }
+    event.target.value = String(appState.membership.lockValue);
     calculate();
   });
 
-  saveBtn.addEventListener("click", saveScenario);
+  saveScenarioBtn.addEventListener("click", saveScenario);
 }
 
-// Bootstrapping iniziale della pagina.
 function init() {
-  renderControls();
+  renderSchemaControls();
+  renderFixedOperators();
   wireGlobalControls();
   loadScenariosFromStorage();
   renderScenarioList();
+  syncMembershipLockInputs();
   calculate();
 }
 

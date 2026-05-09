@@ -9,26 +9,49 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Contenitore principale del wireframe funzionale -->
+  <!-- Contenitore principale -->
   <main>
-    <h1>STF - Prototipo Calcolatore Sostenibilita Economica</h1>
+    <h1>STF - Simulatore Economico Avanzato</h1>
 
-    <!-- Sezione input costi fissi mensili -->
+    <!-- Area ENTRATE -->
     <section>
-      <h2>USCITE Mensili</h2>
+      <h2>Entrate</h2>
+
+      <h3>Postazioni Studio</h3>
+      <div class="grid" id="revenuesStudio"></div>
+
+      <h3>Eventi (Profit / Non Profit)</h3>
+      <div class="grid" id="revenuesEvents"></div>
+
+      <h3>Conferenze</h3>
+      <div class="grid" id="revenuesConference"></div>
+
+      <h3>Corsi</h3>
+      <div class="grid" id="revenuesCourses"></div>
+    </section>
+
+    <!-- Area USCITE -->
+    <section>
+      <h2>Uscite</h2>
+
+      <h3>Costi Fissi</h3>
       <div class="grid" id="fixedCosts"></div>
+
+      <h3>Risorse Umane Fisse</h3>
+      <div class="inline">
+        <p class="helper-text">Aggiungi operatori fissi con costo orario e ore mensili.</p>
+        <button id="addFixedOperatorBtn" type="button">+ Operatore</button>
+      </div>
+      <div id="fixedOperatorsList" class="list-block"></div>
+
+      <h3>Costi Variabili</h3>
+      <div class="grid" id="variableCosts"></div>
     </section>
 
-    <!-- Sezione input entrate da attivita commerciali -->
-    <section>
-      <h2>ENTRATE (escluso tesseramento)</h2>
-      <div class="grid" id="revenues"></div>
-    </section>
-
-    <!-- Sezione tesseramento e lock del costo membership -->
+    <!-- Tesseramento e lock membership -->
     <section>
       <h2>Tesseramento</h2>
-      <div class="grid" id="membership"></div>
+      <div class="grid" id="membershipInputs"></div>
       <div class="inline mt-md">
         <label>
           <input type="checkbox" id="membershipLockEnabled">
@@ -38,11 +61,25 @@
       </div>
     </section>
 
-    <!-- Output economico aggiornato in tempo reale -->
+    <!-- Output in tempo reale -->
     <section>
-      <h2>Output in tempo reale</h2>
+      <h2>Risultati e Break Even Point</h2>
       <output id="summary"></output>
       <output id="lockDetails" class="mt-sm"></output>
+
+      <h3>Proiezioni Temporali</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Orizzonte</th>
+            <th>Uscite</th>
+            <th>Entrate (no tessera)</th>
+            <th>Entrate da tessera</th>
+            <th>Saldo</th>
+          </tr>
+        </thead>
+        <tbody id="projectionTableBody"></tbody>
+      </table>
     </section>
 
     <!-- Gestione scenari salvati nel browser -->
@@ -56,9 +93,9 @@
         <thead>
           <tr>
             <th>Nome</th>
-            <th>Iscritti</th>
-            <th>Membership lock</th>
-            <th>Deficit da coprire</th>
+            <th>Tessera applicata</th>
+            <th>BEP tessera</th>
+            <th>Saldo mensile</th>
             <th>Azioni</th>
           </tr>
         </thead>
