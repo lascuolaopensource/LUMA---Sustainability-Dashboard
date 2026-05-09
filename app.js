@@ -50,7 +50,8 @@ const appState = {
   membership: {
     numero_iscritti: 120,
     lockEnabled: false,
-    lockValue: 10
+    lockValue: 10,
+    quotaMinimaAnnuale: 5
   },
   fieldMeta: {},
   scenarios: []
@@ -61,6 +62,12 @@ const projectionHorizons = [1, 6, 12, 24, 36];
 /*
   Schemi di rendering per tutte le righe configurabili.
   Ogni riga ha checkbox Escludi e checkbox Lock.
+
+  ── LIMITI SLIDER ──────────────────────────────────────────────
+  I valori max (e min) di ogni campo definiscono il range dello
+  slider. Modificali qui per adattarli alle dimensioni del tuo
+  spazio. I commenti su ogni max: spiegano la logica adottata.
+  ───────────────────────────────────────────────────────────────
 */
 const controlSchemas = [
   {
@@ -69,9 +76,9 @@ const controlSchemas = [
     fields: [
       {
         key: "postazioni_studio_mesi",
-        label: "Postazioni Studio: mesi occupati",
+        label: "Postazioni Studio: postazioni occupate",
         min: 1,
-        max: 24,
+        max: 20,    // max 20 postazioni: capienza realistica di un piccolo coworking
         step: 1,
         hasRange: true
       },
@@ -79,7 +86,7 @@ const controlSchemas = [
         key: "postazioni_studio_costo_mensile",
         label: "Postazioni Studio: costo mensile",
         min: 0,
-        max: 5000,
+        max: 2000,  // €2.000/mese per postazione: soglia alta per coworking premium
         step: 10,
         hasRange: true
       }
@@ -93,15 +100,15 @@ const controlSchemas = [
         key: "eventi_profit_prezzo_mezza",
         label: "Eventi Profit: prezzo per mezza giornata",
         min: 0,
-        max: 5000,
+        max: 1000,  // €1.000 per mezza giornata: affitto sala eventi con allestimento
         step: 10,
         hasRange: true
       },
       {
         key: "eventi_profit_mezze_giornate",
         label: "Eventi Profit: numero mezze giornate (al mese)",
-        min: 0,
-        max: 62,
+        min: 1,
+        max: 50,    // 50 mezze giornate/mese: ~2,5 eventi al giorno (massimo teorico)
         step: 1,
         hasRange: true
       },
@@ -109,15 +116,15 @@ const controlSchemas = [
         key: "eventi_non_profit_prezzo_mezza",
         label: "Eventi Non Profit: prezzo per mezza giornata",
         min: 0,
-        max: 5000,
+        max: 500,   // €500: tariffa agevolata per enti non profit o comunita
         step: 10,
         hasRange: true
       },
       {
         key: "eventi_non_profit_mezze_giornate",
         label: "Eventi Non Profit: numero mezze giornate (al mese)",
-        min: 0,
-        max: 62,
+        min: 1,
+        max: 50,    // 50 mezze giornate/mese: stesso tetto degli eventi profit
         step: 1,
         hasRange: true
       }
@@ -130,8 +137,8 @@ const controlSchemas = [
       {
         key: "conferenze_numero_mezze_giornate",
         label: "Conferenze: numero mezze giornate (al mese)",
-        min: 0,
-        max: 62,
+        min: 1,
+        max: 50,    // 50 mezze giornate/mese: coerente con il limite eventi
         step: 1,
         hasRange: true
       },
@@ -139,7 +146,7 @@ const controlSchemas = [
         key: "conferenze_prezzo_unitario",
         label: "Conferenze: prezzo unitario mezza giornata",
         min: 0,
-        max: 5000,
+        max: 1000,  // €1.000: allineato al prezzo eventi profit
         step: 10,
         hasRange: true
       }
@@ -152,16 +159,16 @@ const controlSchemas = [
       {
         key: "corsi_numero_corsi",
         label: "Corsi: numero corsi (al mese)",
-        min: 0,
-        max: 100,
+        min: 1,
+        max: 50,    // 50 corsi/mese: ~2 corsi al giorno, limite realistico
         step: 1,
         hasRange: true
       },
       {
         key: "corsi_partecipanti_per_corso",
         label: "Corsi: partecipanti per corso",
-        min: 0,
-        max: 200,
+        min: 1,
+        max: 50,    // 50 partecipanti: capienza aula formazione piccolo spazio
         step: 1,
         hasRange: true
       },
@@ -169,15 +176,15 @@ const controlSchemas = [
         key: "corsi_prezzo_a_persona",
         label: "Corsi: prezzo a persona",
         min: 0,
-        max: 1000,
-        step: 1,
+        max: 300,   // €300 a partecipante: corso intensivo di una o due giornate
+        step: 5,
         hasRange: true
       },
       {
         key: "corsi_costo_vivo_per_corso",
         label: "Corsi: costi vivi per corso",
         min: 0,
-        max: 20000,
+        max: 1000,  // €1.000 di costi diretti per corso (docente, materiali, ecc.)
         step: 10,
         hasRange: true
       }
@@ -191,7 +198,7 @@ const controlSchemas = [
         key: "acqua",
         label: "Acqua (costo mensile)",
         min: 0,
-        max: 5000,
+        max: 500,   // €500/mese: bolletta acqua per locale commerciale medio
         step: 5,
         hasRange: false
       },
@@ -199,23 +206,23 @@ const controlSchemas = [
         key: "elettricita",
         label: "Elettricità (costo mensile)",
         min: 0,
-        max: 10000,
-        step: 5,
+        max: 2000,  // €2.000/mese: bolletta con climatizzazione e attrezzature
+        step: 10,
         hasRange: false
       },
       {
         key: "gas",
         label: "Gas (costo mensile)",
         min: 0,
-        max: 10000,
-        step: 5,
+        max: 1500,  // €1.500/mese: riscaldamento invernale picco per spazio medio
+        step: 10,
         hasRange: false
       },
       {
         key: "tari",
         label: "TARI (quota mensile)",
         min: 0,
-        max: 5000,
+        max: 200,   // €200/mese: quota TARI mensile per locale commerciale medio
         step: 5,
         hasRange: false
       },
@@ -223,7 +230,7 @@ const controlSchemas = [
         key: "assicurazione",
         label: "Assicurazione (quota mensile)",
         min: 0,
-        max: 5000,
+        max: 800,   // €800/mese: polizza RC e danni per locale aperto al pubblico
         step: 5,
         hasRange: false
       },
@@ -231,7 +238,7 @@ const controlSchemas = [
         key: "pulizie_costo_orario",
         label: "Pulizie: costo orario",
         min: 0,
-        max: 100,
+        max: 50,    // €50/ora: tariffa massima per servizio pulizie professionale
         step: 1,
         hasRange: true
       },
@@ -239,7 +246,7 @@ const controlSchemas = [
         key: "pulizie_ore",
         label: "Pulizie: numero ore (mensili)",
         min: 0,
-        max: 300,
+        max: 120,   // 120 ore/mese: ~4 ore al giorno, pulizie quotidiane intensive
         step: 1,
         hasRange: true
       }
@@ -253,7 +260,7 @@ const controlSchemas = [
         key: "eventi_risorse_costo_orario",
         label: "Produzione eventi: costo orario risorse umane",
         min: 0,
-        max: 200,
+        max: 80,    // €80/ora: tariffa oraria tecnico/coordinatore eventi senior
         step: 1,
         hasRange: true
       },
@@ -261,7 +268,7 @@ const controlSchemas = [
         key: "eventi_risorse_ore",
         label: "Produzione eventi: ore risorse umane (mensili)",
         min: 0,
-        max: 500,
+        max: 160,   // 160 ore/mese: equivalente a un tempo pieno (4 sett. x 40h)
         step: 1,
         hasRange: true
       },
@@ -269,7 +276,7 @@ const controlSchemas = [
         key: "manutenzione_ordinaria",
         label: "Manutenzione ordinaria (budget mensile)",
         min: 0,
-        max: 10000,
+        max: 500,   // €500/mese: interventi ordinari impianti e arredi
         step: 10,
         hasRange: true
       },
@@ -277,7 +284,7 @@ const controlSchemas = [
         key: "consumabili_attrezzoteca",
         label: "Consumabili Attrezzoteca (budget mensile)",
         min: 0,
-        max: 10000,
+        max: 100,   // €100/mese: acquisto/sostituzione consumabili e piccola attrezzatura
         step: 10,
         hasRange: true
       }
@@ -291,7 +298,7 @@ const controlSchemas = [
         key: "numero_iscritti",
         label: "Numero iscritti",
         min: 0,
-        max: 10000,
+        max: 500,   // 500 soci: base associativa grande per un hub comunitario
         step: 1,
         hasRange: true,
         excludeDisabled: true
@@ -813,6 +820,13 @@ function calculate() {
   const breakEvenMembership =
     iscritti > 0 ? Math.max(0, deficitNoMembership / iscritti) : Number.POSITIVE_INFINITY;
 
+  const QUOTA_MINIMA_ANNUALE = Math.max(0, appState.membership.quotaMinimaAnnuale);
+  const quotaSuggeritaAnnuale =
+    deficitNoMembership <= 0
+      ? QUOTA_MINIMA_ANNUALE
+      : Math.max(QUOTA_MINIMA_ANNUALE, Math.ceil(breakEvenMembership * 12));
+  const bepRaggiunto = deficitNoMembership <= 0;
+
   const membershipApplied = appState.membership.lockEnabled
     ? appState.membership.lockValue
     : breakEvenMembership;
@@ -848,6 +862,7 @@ function calculate() {
     }`,
     `Tessera applicata: ${formatCurrency(membershipApplied)}`,
     `Saldo mensile: ${formatCurrency(monthlyBalance)}`,
+    `Quota minima suggerita (annuale per iscritto): ${formatCurrency(quotaSuggeritaAnnuale)}/anno${bepRaggiunto ? " — BEP raggiunto, applicata quota minima configurata" : ""}`,
     "Obiettivo: mantenere il tesseramento basso aumentando entrate autonome o riducendo costi inclusi."
   ].join("\n");
 
@@ -885,6 +900,13 @@ function calculate() {
       kpiMonthlyBalance.textContent = formatCurrency(monthlyBalance);
       kpiMonthlyBalance.classList.toggle("is-positive", monthlyBalance >= 0);
       kpiMonthlyBalance.classList.toggle("is-negative", monthlyBalance < 0);
+    }
+
+    const kpiQuotaSuggerita = document.getElementById("kpiQuotaSuggerita");
+    if (kpiQuotaSuggerita) {
+      kpiQuotaSuggerita.textContent = formatCurrency(quotaSuggeritaAnnuale) + "/anno";
+      kpiQuotaSuggerita.classList.toggle("is-positive", bepRaggiunto);
+      kpiQuotaSuggerita.classList.toggle("is-negative", !bepRaggiunto);
     }
 
   const projectionRows = calculateProjectionRows(
@@ -1035,12 +1057,14 @@ function renderScenarioList() {
 function syncMembershipLockInputs() {
   document.getElementById("membershipLockEnabled").checked = appState.membership.lockEnabled;
   document.getElementById("membershipLockValue").value = String(appState.membership.lockValue);
+  document.getElementById("membershipQuotaMinima").value = String(appState.membership.quotaMinimaAnnuale);
 }
 
 function wireGlobalControls() {
   const addOperatorBtn = document.getElementById("addFixedOperatorBtn");
   const lockEnabled = document.getElementById("membershipLockEnabled");
   const lockValue = document.getElementById("membershipLockValue");
+  const quotaMinima = document.getElementById("membershipQuotaMinima");
   const saveScenarioBtn = document.getElementById("saveScenarioBtn");
 
   addOperatorBtn.addEventListener("click", addFixedOperator);
@@ -1054,6 +1078,13 @@ function wireGlobalControls() {
     const value = Number(event.target.value);
     appState.membership.lockValue = Number.isNaN(value) || value < 0 ? 0 : value;
     event.target.value = String(appState.membership.lockValue);
+    calculate();
+  });
+
+  quotaMinima.addEventListener("input", (event) => {
+    const value = Number(event.target.value);
+    appState.membership.quotaMinimaAnnuale = Number.isNaN(value) || value < 0 ? 0 : value;
+    event.target.value = String(appState.membership.quotaMinimaAnnuale);
     calculate();
   });
 

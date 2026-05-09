@@ -64,6 +64,10 @@
               </label>
               <input type="number" id="membershipLockValue" min="0" step="1" value="10" aria-label="Valore lock membership">
             </div>
+            <div class="inline mt-md">
+              <label for="membershipQuotaMinima">Quota minima annuale (€)</label>
+              <input type="number" id="membershipQuotaMinima" min="0" step="1" value="5" aria-label="Quota minima annuale suggerita">
+            </div>
           </section>
 
           <!-- Output in tempo reale -->
@@ -78,6 +82,10 @@
               <article class="kpi-card">
                 <p>Saldo mensile</p>
                 <strong id="kpiMonthlyBalance">-</strong>
+              </article>
+              <article class="kpi-card">
+                <p>Quota minima suggerita</p>
+                <strong id="kpiQuotaSuggerita">-</strong>
               </article>
             </div>
 
