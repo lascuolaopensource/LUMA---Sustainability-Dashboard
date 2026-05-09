@@ -52,37 +52,39 @@
       </div>
 
       <div class="column column-results">
-        <!-- Tesseramento e lock membership -->
-        <section>
-          <h2>Tesseramento</h2>
-          <div class="grid" id="membershipInputs"></div>
-          <div class="inline mt-md">
-            <label>
-              <input type="checkbox" id="membershipLockEnabled">
-              Blocca costo membership
-            </label>
-            <input type="number" id="membershipLockValue" min="0" step="1" value="10" aria-label="Valore lock membership">
-          </div>
-        </section>
+        <div class="results-sticky">
+          <!-- Tesseramento e lock membership -->
+          <section>
+            <h2>Tesseramento</h2>
+            <div class="grid" id="membershipInputs"></div>
+            <div class="inline mt-md">
+              <label>
+                <input type="checkbox" id="membershipLockEnabled">
+                Blocca costo membership
+              </label>
+              <input type="number" id="membershipLockValue" min="0" step="1" value="10" aria-label="Valore lock membership">
+            </div>
+          </section>
 
-        <!-- Output in tempo reale -->
-        <section class="results-panel">
-          <h2>Risultati e Punto di pareggio</h2>
+          <!-- Output in tempo reale -->
+          <section class="results-panel">
+            <h2>Risultati e Punto di pareggio</h2>
 
-          <div class="kpi-grid">
-            <article class="kpi-card">
-              <p>Pareggio tessera</p>
-              <strong id="kpiBreakEven">-</strong>
-            </article>
-            <article class="kpi-card">
-              <p>Saldo mensile</p>
-              <strong id="kpiMonthlyBalance">-</strong>
-            </article>
-          </div>
+            <div class="kpi-grid">
+              <article class="kpi-card">
+                <p>Pareggio tessera</p>
+                <strong id="kpiBreakEven">-</strong>
+              </article>
+              <article class="kpi-card">
+                <p>Saldo mensile</p>
+                <strong id="kpiMonthlyBalance">-</strong>
+              </article>
+            </div>
 
-          <output id="summary" class="mt-sm"></output>
-          <output id="lockDetails" class="mt-sm"></output>
-        </section>
+            <output id="summary" class="mt-sm"></output>
+            <output id="lockDetails" class="mt-sm"></output>
+          </section>
+        </div>
       </div>
     </div>
 
