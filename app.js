@@ -387,6 +387,7 @@ function createControlRow(group, field) {
     if (rangeInput) {
       rangeInput.disabled = isLocked;
     }
+    row.classList.toggle("is-locked", isLocked);
   }
 
   function applyValue(rawValue) {
@@ -640,6 +641,7 @@ function renderFixedOperators() {
     oreNumber.disabled = operator.locked;
     oreRange.disabled = operator.locked;
     nameInput.disabled = operator.locked;
+    row.classList.toggle("is-locked", operator.locked);
 
     row.appendChild(top);
     row.appendChild(controls);
@@ -864,6 +866,23 @@ function calculate() {
     lockDetails.value =
       "Lock membership disattivato: il sistema applica automaticamente la quota di Break Even.";
   }
+
+    const kpiBreakEven = document.getElementById("kpiBreakEven");
+    const kpiMonthlyBalance = document.getElementById("kpiMonthlyBalance");
+
+    if (kpiBreakEven) {
+      kpiBreakEven.textContent = Number.isFinite(breakEvenMembership)
+        ? formatCurrency(breakEvenMembership)
+        : "N/A";
+      kpiBreakEven.classList.toggle("is-positive", Number.isFinite(breakEvenMembership) && breakEvenMembership >= 0);
+      kpiBreakEven.classList.toggle("is-negative", Number.isFinite(breakEvenMembership) && breakEvenMembership < 0);
+    }
+
+    if (kpiMonthlyBalance) {
+      kpiMonthlyBalance.textContent = formatCurrency(monthlyBalance);
+      kpiMonthlyBalance.classList.toggle("is-positive", monthlyBalance >= 0);
+      kpiMonthlyBalance.classList.toggle("is-negative", monthlyBalance < 0);
+    }
 
   const projectionRows = calculateProjectionRows(
     monthlyCosts,

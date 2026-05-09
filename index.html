@@ -13,95 +13,115 @@
   <main>
     <h1>STF - Simulatore Economico Avanzato</h1>
 
-    <!-- Area ENTRATE -->
-    <section>
-      <h2>Entrate</h2>
+    <div class="layout-grid">
+      <div class="column column-revenues">
+        <!-- Area ENTRATE -->
+        <section>
+          <h2>Entrate</h2>
 
-      <h3>Postazioni Studio</h3>
-      <div class="grid" id="revenuesStudio"></div>
+          <h3>Postazioni Studio</h3>
+          <div class="grid" id="revenuesStudio"></div>
 
-      <h3>Eventi (Profit / Non Profit)</h3>
-      <div class="grid" id="revenuesEvents"></div>
+          <h3>Eventi (Profit / Non Profit)</h3>
+          <div class="grid" id="revenuesEvents"></div>
 
-      <h3>Conferenze</h3>
-      <div class="grid" id="revenuesConference"></div>
+          <h3>Conferenze</h3>
+          <div class="grid" id="revenuesConference"></div>
 
-      <h3>Corsi</h3>
-      <div class="grid" id="revenuesCourses"></div>
-    </section>
-
-    <!-- Area USCITE -->
-    <section>
-      <h2>Uscite</h2>
-
-      <h3>Costi Fissi</h3>
-      <div class="grid" id="fixedCosts"></div>
-
-      <h3>Risorse Umane Fisse</h3>
-      <div class="inline">
-        <p class="helper-text">Aggiungi operatori fissi con costo orario e ore mensili.</p>
-        <button id="addFixedOperatorBtn" type="button">+ Operatore</button>
+          <h3>Corsi</h3>
+          <div class="grid" id="revenuesCourses"></div>
+        </section>
       </div>
-      <div id="fixedOperatorsList" class="list-block"></div>
 
-      <h3>Costi Variabili</h3>
-      <div class="grid" id="variableCosts"></div>
-    </section>
+      <div class="column column-costs">
+        <!-- Area USCITE -->
+        <section>
+          <h2>Uscite</h2>
 
-    <!-- Tesseramento e lock membership -->
-    <section>
-      <h2>Tesseramento</h2>
-      <div class="grid" id="membershipInputs"></div>
-      <div class="inline mt-md">
-        <label>
-          <input type="checkbox" id="membershipLockEnabled">
-          Blocca costo membership
-        </label>
-        <input type="number" id="membershipLockValue" min="0" step="1" value="10" aria-label="Valore lock membership">
+          <h3>Costi Fissi</h3>
+          <div class="grid" id="fixedCosts"></div>
+
+          <h3>Risorse Umane Fisse</h3>
+          <div class="inline">
+            <p class="helper-text">Aggiungi operatori fissi con costo orario e ore mensili.</p>
+            <button id="addFixedOperatorBtn" type="button">+ Operatore</button>
+          </div>
+          <div id="fixedOperatorsList" class="list-block"></div>
+
+          <h3>Costi Variabili</h3>
+          <div class="grid" id="variableCosts"></div>
+        </section>
+
+        <!-- Tesseramento e lock membership -->
+        <section>
+          <h2>Tesseramento</h2>
+          <div class="grid" id="membershipInputs"></div>
+          <div class="inline mt-md">
+            <label>
+              <input type="checkbox" id="membershipLockEnabled">
+              Blocca costo membership
+            </label>
+            <input type="number" id="membershipLockValue" min="0" step="1" value="10" aria-label="Valore lock membership">
+          </div>
+        </section>
       </div>
-    </section>
 
-    <!-- Output in tempo reale -->
-    <section>
-      <h2>Risultati e Break Even Point</h2>
-      <output id="summary"></output>
-      <output id="lockDetails" class="mt-sm"></output>
+      <div class="column column-results">
+        <!-- Output in tempo reale -->
+        <section>
+          <h2>Risultati e Break Even Point</h2>
 
-      <h3>Proiezioni Temporali</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Orizzonte</th>
-            <th>Uscite</th>
-            <th>Entrate (no tessera)</th>
-            <th>Entrate da tessera</th>
-            <th>Saldo</th>
-          </tr>
-        </thead>
-        <tbody id="projectionTableBody"></tbody>
-      </table>
-    </section>
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <p>Break Even tessera</p>
+              <strong id="kpiBreakEven">-</strong>
+            </article>
+            <article class="kpi-card">
+              <p>Saldo mensile</p>
+              <strong id="kpiMonthlyBalance">-</strong>
+            </article>
+          </div>
 
-    <!-- Gestione scenari salvati nel browser -->
-    <section>
-      <h2>Scenari (localStorage)</h2>
-      <div class="inline">
-        <input type="text" id="scenarioName" placeholder="Nome scenario (opzionale)">
-        <button id="saveScenarioBtn" type="button">Salva scenario</button>
+          <output id="summary" class="mt-sm"></output>
+          <output id="lockDetails" class="mt-sm"></output>
+
+          <h3>Proiezioni Temporali</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Orizzonte</th>
+                <th>Uscite</th>
+                <th>Entrate (no tessera)</th>
+                <th>Entrate da tessera</th>
+                <th>Saldo</th>
+              </tr>
+            </thead>
+            <tbody id="projectionTableBody"></tbody>
+          </table>
+        </section>
+
+        <!-- Gestione scenari salvati nel browser -->
+        <section>
+          <h2>Scenari (localStorage)</h2>
+          <div class="inline">
+            <input type="text" id="scenarioName" placeholder="Nome scenario (opzionale)">
+            <button id="saveScenarioBtn" type="button">Salva scenario</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Tessera applicata</th>
+                <th>BEP tessera</th>
+                <th>Saldo mensile</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="scenarioTableBody"></tbody>
+          </table>
+        </section>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Tessera applicata</th>
-            <th>BEP tessera</th>
-            <th>Saldo mensile</th>
-            <th>Azioni</th>
-          </tr>
-        </thead>
-        <tbody id="scenarioTableBody"></tbody>
-      </table>
-    </section>
+    </div>
   </main>
 
   <!-- Logica applicativa separata in file JS -->
