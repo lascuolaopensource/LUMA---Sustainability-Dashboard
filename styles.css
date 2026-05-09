@@ -13,6 +13,24 @@
   --jia: #C9CC83;
 }
 
+@font-face {
+  font-family: "Ronzino";
+  src: url("fonts/Ronzino-Regular.woff2") format("woff2"),
+       url("fonts/Ronzino-Regular.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Q-Sci";
+  src: url("fonts/QSci-Regular.woff2") format("woff2"),
+       url("fonts/QSci-Regular.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 /* Reset essenziale */
 * {
   box-sizing: border-box;
@@ -21,11 +39,20 @@
 /* Layout base della pagina */
 body {
   margin: 0;
-  font-family: sans-serif;
+  font-family: "Ronzino", serif;
   color: var(--nero-mpestatu);
   background: var(--mistra);
   line-height: 1.35;
   padding: 1rem;
+}
+
+input,
+button,
+output,
+table,
+select,
+textarea {
+  font-family: inherit;
 }
 
 main {
@@ -78,7 +105,8 @@ h3 {
   font-weight: 700;
 }
 
-h1 {
+.app-title {
+  font-family: "Q-Sci", "Ronzino", serif;
   font-size: 1.1rem;
 }
 
